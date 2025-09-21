@@ -1,0 +1,43 @@
+# BerTopic项目完整依赖列表 - 生产就绪版本
+# ================================================
+# 本文件确保在任何新环境中安装后都能直接运行项目
+# 生成时间: 2025-09-21
+# Python版本要求: >=3.8
+
+# 核心机器学习和主题建模
+bertopic==0.17.3
+sentence-transformers==5.1.0
+umap-learn==0.5.9.post2
+hdbscan==0.8.40
+scikit-learn==1.7.2
+keybert==0.9.0
+
+# 数据处理和分析
+pandas==2.3.2
+numpy==2.1.2
+openpyxl==3.1.5
+
+# 可视化库
+plotly==6.3.0
+matplotlib==3.10.6
+seaborn==0.13.2
+
+# Web应用界面
+streamlit==1.49.1
+
+# 自然语言处理
+spacy==3.8.7
+langdetect==1.0.9
+jieba==0.42.1
+
+# 配置和工具
+pyyaml==6.0.2
+requests==2.32.5
+tqdm==4.67.1
+
+# 注意事项:
+# 1. 如果遇到 sentence-transformers 导入错误，请运行:
+#    pip install transformers==4.44.2
+# 2. 安装 spacy 后，如需中文支持，请运行:
+#    python -m spacy download zh_core_web_sm
+# 3. 首次运行可能需要下载模型文件，请确保网络连接正常
