@@ -1,0 +1,194 @@
+ai_labeling:
+  enable: false
+ai_labeling_advanced:
+  api_config:
+    API_KEYS:
+    - ${OPENAI_API_KEY}
+    BASE_URL: https://openai.sharkmagic.com.cn/v1
+    MODEL: '[官自-0.7]gemini-2-5-flash'
+  label_settings:
+    length: 8-12个汉字
+    max_retries: 3
+    request_delay: 0.5
+    style: 学术化简洁
+    timeout: 60
+  prompt_style: academic
+  prompt_templates:
+    academic: '您是一位专业的学术研究助手，擅长为主题建模结果生成准确、简洁的中文标签。
+
+
+      任务：基于以下关键词为主题生成一个中文标签
+
+      要求：{length}，{style}风格，准确概括主题核心内容
+
+
+      关键词：{keywords}
+
+
+      分析步骤：
+
+      1. 理解关键词的语义关联
+
+      2. 识别主题的核心概念
+
+      3. 生成简洁准确的标签
+
+
+      请严格按照JSON格式输出：
+
+      {{"topic_label": "您生成的主题标签"}}
+
+
+      注意：
+
+      - 标签必须是中文
+
+      - 长度控制在{length}
+
+      - 风格保持{style}
+
+      - 避免使用过于宽泛的词汇
+
+      '
+    concise: '基于关键词生成中文主题标签，要求{length}，{style}风格。
+
+
+      关键词：{keywords}
+
+
+      输出JSON格式：{{"topic_label": "主题标签"}}
+
+      '
+    creative: '您是一位资深的内容策划师，请为以下主题关键词创造一个生动、准确的中文标签。
+
+
+      关键词：{keywords}
+
+
+      要求：
+
+      - {length}
+
+      - {style}风格
+
+      - 既要准确概括主题，又要有一定的表现力
+
+      - 适合学术研究和媒体传播
+
+
+      请输出：{{"topic_label": "您的创意标签"}}
+
+      '
+    custom: '# 在这里写您的自定义提示词
+
+      # 可用变量：{keywords}, {length}, {style}
+
+
+      基于关键词：{keywords}
+
+      生成{length}的{style}中文标签
+
+
+      输出：{{"topic_label": "标签内容"}}
+
+      '
+analysis_features:
+  academic_charts:
+    dpi: 300
+    enable: true
+    formats:
+    - pdf
+  source_comparison:
+    enable: true
+  time_evolution:
+    enable: true
+    time_periods: 10
+analysis_mode: tune
+auto_tuning:
+  save_best: 5
+  trials: 100
+auto_tuning_advanced:
+  search_space:
+    clustering_sensitivity:
+    - 2
+    - 15
+    topic_granularity:
+    - 5
+    - 50
+candidate_parameters:
+  candidate_1:
+    coherence_score: 0.0
+    description: 中等粒度, 平衡聚类, 高稳定性
+    min_cluster_size: 31
+    min_samples: 1
+    min_topic_size: null
+    n_components: 10
+    n_neighbors: 22
+  candidate_2:
+    coherence_score: 0.0
+    description: 中等粒度, 平衡聚类, 高稳定性
+    min_cluster_size: 96
+    min_samples: 3
+    min_topic_size: null
+    n_components: 4
+    n_neighbors: 13
+  candidate_3:
+    coherence_score: 0.0
+    description: 中等粒度, 全局聚类, 高稳定性
+    min_cluster_size: 123
+    min_samples: 5
+    min_topic_size: null
+    n_components: 3
+    n_neighbors: 32
+  candidate_4:
+    coherence_score: 0.0
+    description: 中等粒度, 全局聚类, 高稳定性
+    min_cluster_size: 146
+    min_samples: 12
+    min_topic_size: null
+    n_components: 4
+    n_neighbors: 35
+  candidate_5:
+    coherence_score: 0.0
+    description: 中等粒度, 平衡聚类, 高稳定性
+    min_cluster_size: 86
+    min_samples: 3
+    min_topic_size: null
+    n_components: 4
+    n_neighbors: 22
+data_files:
+  social_media: 'null'
+  traditional_media: data/(不能删)analyzed_ok3-总库-切分去噪-第二章俄总统数据.xlsx
+output_settings:
+  file_names:
+    analysis_report: 主题分析报告.txt
+    document_mapping: 文档主题分布表.csv
+    keyword_table: 主题关键词表.csv
+    topic_summary: 主题摘要表.csv
+  generate_files:
+    analysis_report: true
+    document_mapping: true
+    interactive_charts: true
+    keyword_table: true
+    topic_summary: true
+  results_folder: results
+parameter_selection:
+  manual_override:
+    enable: false
+    expected_topics: 20
+    min_documents_per_topic: 15
+  use_candidate: 1
+system_settings:
+  logging:
+    level: INFO
+    save_log: true
+  max_memory: auto
+  random_seed: 42
+  use_gpu: false
+topic_advanced_settings:
+  keyword_extraction: enhanced
+  similarity_threshold: 0.7
+topic_settings:
+  expected_topics: auto
+  min_documents_per_topic: 15
+  text_language: chinese
