@@ -1,0 +1,243 @@
+# ==============================================
+# config_manual.yaml  （人工维护版）
+# 使用方法：需要运行时，把本文件复制到 config.yaml
+# ==============================================
+
+# ---------- 数据来源（务必确保文件存在） ----------
+data:
+  files:
+    traditional_media: data/(不能删)analyzed_ok3-总库-切分去噪-第二章俄总统数据.xlsx
+    social_media: null       # 暂无社交媒体数据，保持 null
+
+# ---------- 运行模式 ----------
+analysis:
+  mode: tune       # 调参模式tune，分析模式analyze
+
+# ---------- Stage 1 产出的候选参数（人工复核用） ----------
+# 操作步骤：
+# 1. 打开 results/candidate_parameters.yaml，挑选想要验证的候选。
+# 2. 在本文件（config_manual.yaml）里粘贴/更新对应候选参数。
+# 3. 设置 selected_candidate: X（与候选编号一致）。
+# 4. 复制本文件覆盖 config.yaml。
+# 5. 运行 python main.py --run 获取正式分析结果。
+candidate_parameters:
+  selected_candidate: 2      # 当前选用的候选编号；与候选编号一致
+
+  # -------------------------------
+  # 候选参数
+  # -------------------------------
+
+  candidate_2:
+    coherence_score: 0.8397273715158711
+    min_cluster_size: 138
+    min_samples: 7
+    min_topic_size: 138
+    n_components: 4
+    n_neighbors: 26
+    rank: 2
+
+# ==============================================
+# 🎯 自动调参配置
+# ==============================================
+# ⚠️ 重要：coherence分数（一致性分数）≠主题可解释力
+# - 分数只是数学指标（词汇共现统计）
+# - 真正的质量要看：关键词是否有意义、主题是否有区分度
+# - Top5候选都要跑一次分析，人工看关键词，选最有意义的
+# - 不要盲目选择candidate_1（分数最高≠最有用）
+advanced:
+  auto_tuning:
+    trials: 40                     # 测试次数（增加以充分探索参数空间）
+    save_best: 5                   # 保留前5名候选（都要人工评估）
+    
+    # 数据量：改成你的实际文档数
+    sample_ratio_stage1: 1         # 1=用百分之多少的数据
+    min_samples_stage1: 1100       # 最小抽样数
+    stage1_repeats: 1              # 1=跑1轮（想稳定改成2但慢1倍）
+
+  auto_tuning_advanced:
+    search_space:
+      # ⭐⭐⭐ Tier 1：最关键参数（大范围探索）
+      min_cluster_size: [30, 70]       # HDBSCAN聚类大小（大范围：从细粒度到粗粒度）
+      n_neighbors: [5, 15]               # UMAP邻居数（⚠️关键！小值→局部细节，大值→全局结构）
+      # ⭐⭐ Tier 2：重要参数
+      min_samples: [3, 12]               # HDBSCAN核心密度（影响聚类稳健性）
+      n_components: [3, 10]              # UMAP降维维度（影响信息保留）
+      
+      
+      # ⭐ Tier 3：次要参数
+      min_dist: [0.0, 0.3]               # UMAP局部/全局平衡
+      metric: ['cosine']                 # 文本标准用cosine
+      cluster_selection_method: ['eom']  # HDBSCAN最稳定方法
+      max_features: [None, 5000]         # 词汇表大小
+
+# ---------- 主题模型核心参数（不需要改） ----------
+topic:
+  text_language: russian
+  min_documents_per_topic: 50    # 正式分析时每个主题至少50篇（与上面min_cluster_size下限一致）
+  expected_topics: auto          # 目标主题数量；auto=交给模型自动决定
+  advanced:
+    keyword_extraction: standard # 关键词提取模式；除非有特殊需求不用改
+    min_dist: 0.0                 # UMAP 降维时的最小距离，控制主题分散度
+    ngram_range: [1, 3]           # 关键词可包含的词数范围（1=单词 3=最多3词短语）
+    
+# ---------- AI 主题命名参数（按需填写后启用） ----------
+ai_labeling:
+  enable: true          # 是否自动生成主题名称
+
+ai_labeling_advanced:
+  api_config:
+    BASE_URL: https://openai.sharkmagic.com.cn/v1  # 模型接口地址，可换成自有服务
+    MODEL: "[官自-0.7]gemini-2-5-flash"                    # 模型名称
+    API_KEYS:
+      - ${OPENAI_API_KEY}                               # 直接填密钥或写成 ${ENV_NAME}
+  label_settings:
+    length: 8-12个汉字                                     # 期望标签长度
+    style: 学术化简洁                                      # 标签风格提示
+    request_delay: 0.5                                     # 每次请求间隔（秒）
+    max_retries: 3                                         # 失败重试次数
+    timeout: 60                                            # 单次请求超时（秒）
+  prompt_style: academic                                   # 使用的提示词模板
+  prompt_templates:
+    academic: |
+      任务：为俄罗斯总统演讲主题聚类结果生成中文分析报告。
+      
+      【c-TF-IDF权重最高的5个词】：{top_words}
+      
+      【BERTopic多方法生成的10个短语】：{representation}
+      
+      【spaCy词性分析提取的名词短语】：{enhanced_keywords}
+      
+      【该主题最典型的部分文档原文】：
+      {representative_docs}
+      
+      基于以上信息，生成详细分析：
+      1. topic_label: {length}的{style}主题标签
+      2. core_meaning: 100字以内政治意义和核心内涵
+      3. typical_discourse: 3-5个典型话语特征或表述模式
+      4. uniqueness: 50字以内该主题的独特性
+      
+      输出格式（严格遵守，只输出JSON）：
+      {{
+        "topic_label": "标签",
+        "core_meaning": "核心内涵",
+        "typical_discourse": ["特征1", "特征2", "特征3"],
+        "uniqueness": "独特性"
+      }}
+
+# ---------- 关键词提取方案选择 ----------
+# 方案A（expert）：深度词性分析，质量高，适合学术论文（需要spaCy模型）
+# 方案B（lightweight）：轻量分词，速度快
+bertopic_params:
+  use_expert_keywords: true     # true=方案A（推荐博士论文使用） | false=方案B
+  expert_keyword_extraction:
+    enable_pos_patterns: true   # 是否启用词性标注模式提取
+    use_custom_stopwords: true  # 是否使用自定义停用词
+    custom_stopwords_path: stopwords/politics_stopwords.txt  # 停用词文件路径
+
+# ---------- 文本读取与元数据 ----------
+data_processing:
+  text_column: Unit_Text     # 正文所在列
+  metadata_columns:
+    - Incident
+    - Frame_SolutionRecommendation
+    - Frame_ResponsibilityAttribution
+    - Frame_CausalExplanation
+    - Frame_MoralEvaluation
+    - Frame_ProblemDefinition
+    - Frame_ActionStatement
+    - Valence
+    - Evidence_Type
+    - Attribution_Level
+    - Temporal_Focus
+    - Primary_Actor_Type
+    - Geographic_Scope
+    - Relationship_Model_Definition
+    - Discourse_Type
+
+  # ---------- 系统设置 ----------
+  system:
+    random_seed: 42          # 随机种子，保证结果可复现
+    use_gpu: false           # 是否使用显卡；没有 GPU 就保持 false
+    max_memory: auto         # 内存限制；auto 让系统自己判断
+
+  # ==============================================
+  #  results文件夹生成内容总览
+  # ==============================================
+  # ---------- 图表格式设置 ----------
+  graphs:
+    enable: true             # SOTA图表总开关（关闭则outputs.sota_charts全部不生成）
+    dpi: 300                 # 图表清晰度（推荐300用于论文）
+    formats: [pdf]           # 输出格式：pdf/png/svg（可多选，如 [pdf, png]）
+
+# ---------- 📊 【组1】核心数据文件控制 ----------
+outputs:
+  topic_summary: true        # 生成：主题摘要表.csv（核心结果，包含主题、关键词、文档数）
+  enhanced_summary: true     # 生成：主题摘要表_enhanced.csv（含更多字段：频次/得分等）
+  
+  analysis_report: true      # 生成：主题分析报告.txt（综合分析文字报告）
+  comprehensive_report: true # 增强内容：在主题分析报告.txt中整合跨语言、时间演化等信息
+  
+  cross_lingual: true        # 生成：跨语言构成报告.csv + 跨语言分析图.pdf（需语料确实多语种）
+  
+  enhanced_keywords: true    # 增强功能：额外抽取 PoS 短语，辅助理解主题（用于增强摘要/报告）
+  
+# ---------- 📈 【组2】学术级图表控制（论文发表用，300DPI高清PDF/PNG） ----------
+  sota_charts:
+    topic_distance_map: true           # 生成：主题距离分布图.pdf（展示主题在空间中的分布）
+    hierarchical_dendrogram: true      # 生成：主题层次聚类树状图.pdf（展示主题层次关系）
+    topic_sizes: true                  # 生成：主题规模分布图.pdf（展示各主题文档数对比）
+    topic_similarity_heatmap: true     # 生成：主题相似度热力图.pdf（展示主题间相似性）
+    topic_word_scores: true            # 生成：主题关键词得分图.pdf（展示每个主题的关键词权重）
+    ctfidf_decay: true                 # 生成：关键词权重衰减图.pdf（展示TF-IDF权重衰减曲线）
+    topic_impact_frequency: true       # 生成：主题影响力频率分析图.pdf（四象限主题分类）
+    topics_over_time: true             # 生成：主题时间演化趋势图.pdf（论文用时间演化，需时间数据）
+
+# ---------- 🌐 【组3】交互式HTML图表控制（数据探索用，不可打印） ----------
+features:
+  time_evolution:
+    enable: true             # 【生成文件】主题时间演化图.html + 主题演化分析.csvcsvcsvcsv
+    date_column: 日期        # 指定日期所在列
+    time_periods: 10         # 时间轴分成多少段
+    evolution_tuning: true   # 演化质量优化（推荐开启）
+    global_tuning: true      # 跨时间一致性优化（推荐开启）
+    
+  source_comparison:
+    source_column: Source    # 生成：来源主题热力图.html（当数据有Source列时自动生成）
+    
+  frame_analysis:
+    enable: false            # 生成：框架热力图.html（需数据包含 Frame_*_Present 列）
+
+# ---------- 📄 【组4】文件名映射（带序号的输出文件名，无需修改） ----------
+
+output_settings:
+  folder: results            # 输出文件夹名称
+  
+  # 数据文件名映射（1-2, 4）
+  names:
+    topic_summary: 1-主题摘要表.csv
+    document_mapping: 2-主题文档详细分布.csv
+    analysis_report: 4-主题分析报告.txt
+  
+  # 学术图表名映射（7-13）
+  chart_names:
+    hierarchical_dendrogram: 7-主题层次聚类树状图
+    topic_distance_map: 8-主题距离分布图
+    topic_sizes: 9-主题规模分布图
+    topic_similarity_heatmap: 10-主题相似度热力图
+    topic_word_scores: 11-主题关键词得分图
+    ctfidf_decay: 12-关键词权重衰减图
+    topic_impact_frequency: 13-主题影响力频率分析图
+
+    
+#   📊 数据文件：
+#     3-跨语言构成报告.csv                 ← 在 config_loader.py 中硬编码
+#   📄 报告文件：
+#     5-候选X_分析摘要.txt                 ← 在 main.py 中硬编码
+#   🌐 交互图表：
+#     6-主题可视化.html                    ← 在 config_loader.py 中硬编码
+#   📈 学术图表（PDF）：
+#     14-跨语言分析图.pdf                  ← 在 cross_lingual.py 中硬编码
+#   📁 其他：
+#     候选参数.yaml                        ← 调参结果，在 tuning_manager.py 中定义
+#     config_backups/                      ← 配置备份文件夹
+#     训练模型/                            ← BERTopic模型权重文件夹

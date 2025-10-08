@@ -1,0 +1,185 @@
+advanced:
+  auto_tuning:
+    min_samples_stage1: 1100
+    sample_ratio_stage1: 1
+    save_best: 5
+    stage1_repeats: 1
+    trials: 40
+  auto_tuning_advanced:
+    search_space:
+      cluster_selection_method:
+      - eom
+      max_features:
+      - None
+      - 5000
+      metric:
+      - cosine
+      min_cluster_size:
+      - 30
+      - 70
+      min_dist:
+      - 0.0
+      - 0.3
+      min_samples:
+      - 3
+      - 12
+      n_components:
+      - 3
+      - 10
+      n_neighbors:
+      - 5
+      - 15
+ai_labeling:
+  enable: true
+ai_labeling_advanced:
+  api_config:
+    API_KEYS:
+    - ${OPENAI_API_KEY}
+    BASE_URL: https://openai.sharkmagic.com.cn/v1
+    MODEL: '[官自-0.7]gemini-2-5-flash'
+  label_settings:
+    length: 8-12个汉字
+    max_retries: 3
+    request_delay: 0.5
+    style: 学术化简洁
+    timeout: 60
+  prompt_style: academic
+  prompt_templates:
+    academic: "任务：为俄罗斯总统演讲主题聚类结果生成中文分析报告。\n\n【c-TF-IDF权重最高的5个词】：{top_words}\n\n【BERTopic多方法生成的10个短语】：{representation}\n\
+      \n【spaCy词性分析提取的名词短语】：{enhanced_keywords}\n\n【该主题最典型的部分文档原文】：\n{representative_docs}\n\
+      \n基于以上信息，生成详细分析：\n1. topic_label: {length}的{style}主题标签\n2. core_meaning: 100字以内政治意义和核心内涵\n\
+      3. typical_discourse: 3-5个典型话语特征或表述模式\n4. uniqueness: 50字以内该主题的独特性\n\n输出格式（严格遵守，只输出JSON）：\n\
+      {{\n  \"topic_label\": \"标签\",\n  \"core_meaning\": \"核心内涵\",\n  \"typical_discourse\"\
+      : [\"特征1\", \"特征2\", \"特征3\"],\n  \"uniqueness\": \"独特性\"\n}}\n"
+analysis:
+  mode: analyze
+bertopic_params:
+  expert_keyword_extraction:
+    custom_stopwords_path: stopwords/politics_stopwords.txt
+    enable_pos_patterns: true
+    use_custom_stopwords: true
+  use_expert_keywords: true
+candidate_parameters:
+  candidate_1:
+    coherence_score: 1.0
+    min_cluster_size: 52
+    min_samples: 6
+    min_topic_size: 52
+    n_components: 3
+    n_neighbors: 13
+    rank: 1
+  candidate_2:
+    coherence_score: 0.9086526969962552
+    min_cluster_size: 65
+    min_samples: 12
+    min_topic_size: 65
+    n_components: 6
+    n_neighbors: 13
+    rank: 2
+  candidate_3:
+    coherence_score: 0.9085484035841225
+    min_cluster_size: 69
+    min_samples: 10
+    min_topic_size: 69
+    n_components: 3
+    n_neighbors: 12
+    rank: 3
+  candidate_4:
+    coherence_score: 0.9081187911216972
+    min_cluster_size: 49
+    min_samples: 7
+    min_topic_size: 49
+    n_components: 3
+    n_neighbors: 12
+    rank: 4
+  candidate_5:
+    coherence_score: 0.9069347800646752
+    min_cluster_size: 48
+    min_samples: 4
+    min_topic_size: 48
+    n_components: 6
+    n_neighbors: 13
+    rank: 5
+  selected_candidate: 1
+data:
+  files:
+    social_media: null
+    traditional_media: data/(不能删)analyzed_ok3-总库-切分去噪-第二章俄总统数据.xlsx
+data_processing:
+  graphs:
+    dpi: 300
+    enable: true
+    formats:
+    - pdf
+  metadata_columns:
+  - Incident
+  - Frame_SolutionRecommendation
+  - Frame_ResponsibilityAttribution
+  - Frame_CausalExplanation
+  - Frame_MoralEvaluation
+  - Frame_ProblemDefinition
+  - Frame_ActionStatement
+  - Valence
+  - Evidence_Type
+  - Attribution_Level
+  - Temporal_Focus
+  - Primary_Actor_Type
+  - Geographic_Scope
+  - Relationship_Model_Definition
+  - Discourse_Type
+  system:
+    max_memory: auto
+    random_seed: 42
+    use_gpu: false
+  text_column: Unit_Text
+features:
+  frame_analysis:
+    enable: false
+  source_comparison:
+    source_column: Source
+  time_evolution:
+    date_column: 日期
+    enable: true
+    evolution_tuning: true
+    global_tuning: true
+    time_periods: 10
+output_settings:
+  chart_names:
+    ctfidf_decay: 12-关键词权重衰减图
+    hierarchical_dendrogram: 7-主题层次聚类树状图
+    topic_distance_map: 8-主题距离分布图
+    topic_impact_frequency: 13-主题影响力频率分析图
+    topic_similarity_heatmap: 10-主题相似度热力图
+    topic_sizes: 9-主题规模分布图
+    topic_word_scores: 11-主题关键词得分图
+  folder: results
+  names:
+    analysis_report: 4-主题分析报告.txt
+    document_mapping: 2-主题文档详细分布.csv
+    topic_summary: 1-主题摘要表.csv
+outputs:
+  analysis_report: true
+  comprehensive_report: true
+  cross_lingual: true
+  enhanced_keywords: true
+  enhanced_summary: true
+  sota_charts:
+    ctfidf_decay: true
+    hierarchical_dendrogram: true
+    topic_distance_map: true
+    topic_impact_frequency: true
+    topic_similarity_heatmap: true
+    topic_sizes: true
+    topic_word_scores: true
+    topics_over_time: true
+  topic_summary: true
+topic:
+  advanced:
+    keyword_extraction: standard
+    min_dist: 0.0
+    ngram_range:
+    - 1
+    - 3
+  expected_topics: auto
+  min_documents_per_topic: 50
+  text_language: russian
